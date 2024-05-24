@@ -26,10 +26,10 @@ export class Sale {
   @Transform(({ value }) => value.toJSON())
   owner: User;
 
-  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Product' }] })
+  @Prop({type: MongooseSchema.Types.ObjectId, ref: 'Product' })
   @Type(() => Product)
   @Transform(({ value }) => value.toJSON())
-  products: Product[];
+  product: Product;
 }
 
 export const SaleSchema = SchemaFactory.createForClass(Sale);

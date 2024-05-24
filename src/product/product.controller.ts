@@ -8,6 +8,7 @@ import {
   Delete,
   Res,
   HttpStatus,
+  Put,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -27,10 +28,9 @@ export class ProductController {
    */
   async create(@Res() response, @Body() createProductDto: CreateProductDto) {
     try {
-      const newProduct = await this.productService.create(createProductDto);
+      const product = await this.productService.create(createProductDto);
       return response.status(HttpStatus.CREATED).json({
-        message: 'Product created successfully',
-        newProduct,
+        product,
       });
     } catch (error) {
       return response.status(HttpStatus.BAD_REQUEST).json({
@@ -68,9 +68,7 @@ export class ProductController {
     const product = await this.productService.findOne(id);
     // console.log(product);
     if (!product) {
-      return response.status(HttpStatus.NOT_FOUND).json({
-        message: 'Product not found',
-      });
+      return response.status(HttpStatus.NOT_FOUND).json({});
     }
 
     return response.status(HttpStatus.OK).json(product);
@@ -85,20 +83,26 @@ export class ProductController {
    * @param {Response} response - The response object to send the result.
    * @return {Promise<Product | void>} - The updated product if it exists, or void if it doesn't.
    */
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
     @Res() response,
   ) {
-    const product = this.productService.update(id, updateProductDto);
-
-    if (!product) {
-      return response.status(HttpStatus.NOT_FOUND).json({
-        message: 'Product not found',
+    try {
+      const product = await this.productService.update(id, updateProductDto);
+      if (!product) {
+        return response.status(HttpStatus.NOT_FOUND).json({
+          message: 'Product not found',
+        });
+      }
+      return response.status(HttpStatus.OK).json(product);
+    } catch (error) {
+      return response.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: 400,
+        message: error.message,
+        error: 'Bad Request',
       });
     }
-
-    return product;
   }
 
   @Delete(':id')
@@ -109,15 +113,23 @@ export class ProductController {
    * @param {Response} response - The response object to send the result.
    * @return {Promise<Product | void>} - The removed product if it exists, or void if it doesn't.
    */
-  remove(@Param('id') id: string, @Res() response) {
-    const product = this.productService.remove(id);
-
-    if (!product) {
-      return response.status(HttpStatus.NOT_FOUND).json({
-        message: 'Product not found',
+  async remove(@Param('id') id: string, @Res() response) {
+    try {
+      const product = await this.productService.remove(id);
+      if (!product) {
+        return response.status(HttpStatus.NOT_FOUND).json({
+          message: 'Product not found',
+        });
+      }
+      return response.status(HttpStatus.NO_CONTENT).json({
+        message: 'Product deleted successfully',
+      });
+    } catch (error) {
+      return response.status(HttpStatus.BAD_REQUEST).json({
+        statusCode: 400,
+        message: error.message,
+        error: 'Bad Request',
       });
     }
-
-    return product;
   }
 }

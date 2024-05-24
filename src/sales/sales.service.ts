@@ -22,29 +22,32 @@ export class SalesService {
     private readonly configService: ConfigService,
     private readonly producerService: ProducerService,
   ) {}
+  /**
+   * Creates a new sale with the given data and owner.
+   *
+   * @param {CreateSaleDto} createSaleDto - The data for the sale to be created.
+   * @param {TokenPayload} owner - The owner of the sale.
+   * @return {Promise<SaleDocument>} The created sale.
+   */
   async create(createSaleDto: CreateSaleDto, owner: TokenPayload) {
-    const products = await this.productService.findByIds(
-      createSaleDto.products,
-    );
+    const product = await this.productService.findOne(createSaleDto.product);
+    if (!createSaleDto.amount) {
+      createSaleDto.amount = product.price;
+    }
 
     //calculate the total amount
-    let totalAmount = 0;
-    products.forEach((product) => {
-      totalAmount += product.price;
-    });
-
     const commission =
-      totalAmount * this.configService.get('SALES_COMMISSION_PERCENTAGE');
+      createSaleDto.amount *
+      this.configService.get('SALES_COMMISSION_PERCENTAGE');
 
     const createdSale = new this.saleModel({
       ...createSaleDto,
-      amount: totalAmount,
       commission,
       owner: owner.userId,
     });
 
     await createdSale.populate({
-      path: 'products',
+      path: 'product',
       select: 'name price',
       model: 'Product',
     });
@@ -62,7 +65,7 @@ export class SalesService {
     const sales = await this.saleModel
       .find({ owner: userId })
       .populate({ path: 'owner', select: 'name email' })
-      .populate({ path: 'products', select: 'name price', model: 'Product' });
+      .populate({ path: 'product', select: 'name price', model: 'Product' });
     return sales;
   }
 
@@ -84,10 +87,16 @@ export class SalesService {
     const sales = await this.saleModel
       .find({ owner: user._id })
       .populate({ path: 'owner', select: 'name email' })
-      .populate({ path: 'products', select: 'name price', model: 'Product' });
+      .populate({ path: 'product', select: 'name price', model: 'Product' });
     return sales;
   }
 
+  /**
+   * Sends the user's sales information by email.
+   *
+   * @param {string} id - The ID of the user.
+   * @return {Promise<string>} - A promise that resolves to the email body containing the total amount and total commission.
+   */
   async sendUserSalesByEmail(id: string) {
     const sales = await this.findUserSales(id);
     const user = await this.userService.findOne(id);
@@ -109,19 +118,25 @@ export class SalesService {
     return emailBody;
   }
 
-  findAll() {
-    return `This action returns all sales`;
+  async update(id: string, updateSaleDto: UpdateSaleDto) {
+    return this.saleModel.findByIdAndUpdate(id, updateSaleDto, { new: false });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} sale`;
+  async findAll() {
+    return await this.saleModel
+      .find()
+      .populate({ path: 'owner', select: 'name email' })
+      .populate({ path: 'product', select: 'name price', model: 'Product' });
   }
 
-  update(id: number, updateSaleDto: UpdateSaleDto) {
-    return `This action updates a #${id} sale`;
+  async findOne(id: string) {
+    return await this.saleModel
+      .findById(id)
+      .populate({ path: 'owner', select: 'name email' })
+      .populate({ path: 'product', select: 'name price', model: 'Product' });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} sale`;
+  async remove(id: string) {
+    return await this.saleModel.findByIdAndDelete(id);
   }
 }

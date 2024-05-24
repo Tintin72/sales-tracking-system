@@ -15,7 +15,6 @@ import { CreateUserDto } from '../user/dto/create-user.dto';
 import { User, UserDocument } from '../user/schema/user.schema';
 import { UserService } from 'src/user/user.service';
 import { ConfigService } from '@nestjs/config';
-import TokenPayload from './auth.interface';
 
 @Injectable()
 export class AuthService {
@@ -74,23 +73,5 @@ export class AuthService {
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
-  }
-
-  /**
-   * Generates a cookie with a JWT token for the given user ID.
-   *
-   * @param {string} userId - The ID of the user.
-   * @return {Promise<string>} A promise that resolves to the cookie string.
-   */
-  public async getCookieWithJwtToken(userId: string) {
-    const payload: TokenPayload = { userId };
-    const token = await this.jwtService.signAsync(payload);
-    return `Authorization=$Bearer {token}; HttpOnly; Path=/; Max-Age=${this.configService.get(
-      'JWT_EXPIRATION_TIME',
-    )}`;
-  }
-
-  public async getCookieForLogOut() {
-    return `Authentication=; HttpOnly; Path=/; Max-Age=0`;
   }
 }

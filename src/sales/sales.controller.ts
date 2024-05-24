@@ -24,6 +24,15 @@ export class SalesController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  /**
+   * Creates a new sale based on the provided createSaleDto.
+   *
+   * @param {CreateSaleDto} createSaleDto - The data for creating a new sale.
+   * @param {Response} response - The response object.
+   * @param {Request} req - The request object.
+   * @return {Promise<any>} The created sale object.
+   * @throws {HttpException} If there is an error creating the sale.
+   */
   async create(
     @Body() createSaleDto: CreateSaleDto,
     @Res() response,
@@ -42,6 +51,14 @@ export class SalesController {
 
   @Get('/user')
   @UseGuards(JwtAuthGuard)
+  /**
+   * Retrieves the sales made by a user based on the provided query parameters.
+   *
+   * @param {Req} req - The request object.
+   * @param {Res} response - The response object.
+   * @param {string} query - The email query parameter.
+   * @return {Promise<Response>} The response object with the sales data or an error message.
+   */
   async findUserSales(@Req() req, @Res() response, @Query('email') query) {
     try {
       const user: TokenPayload = req.user;
@@ -51,10 +68,9 @@ export class SalesController {
           const sales = await this.salesService.findUserSalesByEmail(query);
           return response.status(HttpStatus.OK).json(sales);
         } catch (e) {
-          throw e;
-          // return response
-          //   .status(HttpStatus.BAD_REQUEST)
-          //   .json({ message: e.message });
+          return response
+            .status(HttpStatus.BAD_REQUEST)
+            .json({ message: e.message });
         }
       }
       const sales = await this.salesService.findUserSales(user.userId);
@@ -89,16 +105,16 @@ export class SalesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.salesService.findOne(+id);
+    return this.salesService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateSaleDto: UpdateSaleDto) {
-    return this.salesService.update(+id, updateSaleDto);
+    return this.salesService.update(id, updateSaleDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.salesService.remove(+id);
+    return this.salesService.remove(id);
   }
 }
