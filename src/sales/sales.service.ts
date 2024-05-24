@@ -8,6 +8,10 @@ import { Model } from 'mongoose';
 import TokenPayload from 'src/auth/auth.interface';
 import { ProductService } from 'src/product/product.service';
 import { UserService } from 'src/user/user.service';
+import { ConfigService } from '@nestjs/config';
+import { EmailService } from 'src/email/email.service';
+import { EmailContent } from 'src/email/email.interface';
+import { ProducerService } from 'src/queues/producer.queue';
 
 @Injectable()
 export class SalesService {
@@ -15,22 +19,22 @@ export class SalesService {
     @InjectModel('Sale') private saleModel: Model<SaleDocument>,
     private readonly productService: ProductService,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
+    private readonly producerService: ProducerService,
   ) {}
   async create(createSaleDto: CreateSaleDto, owner: TokenPayload) {
     const products = await this.productService.findByIds(
       createSaleDto.products,
     );
 
-    console.log('products', products);
-
     //calculate the total amount
     let totalAmount = 0;
     products.forEach((product) => {
       totalAmount += product.price;
     });
-    console.log('totalAmount', totalAmount);
 
-    const commission = totalAmount * 0.05;
+    const commission =
+      totalAmount * this.configService.get('SALES_COMMISSION_PERCENTAGE');
 
     const createdSale = new this.saleModel({
       ...createSaleDto,
@@ -82,6 +86,27 @@ export class SalesService {
       .populate({ path: 'owner', select: 'name email' })
       .populate({ path: 'products', select: 'name price', model: 'Product' });
     return sales;
+  }
+
+  async sendUserSalesByEmail(id: string) {
+    const sales = await this.findUserSales(id);
+    const user = await this.userService.findOne(id);
+    const totalAmount = sales.reduce((acc, sale) => acc + sale.amount, 0);
+    const totalCommission = sales.reduce(
+      (acc, sale) => acc + sale.commission,
+      0,
+    );
+
+    const emailBody = `Total amount: ${totalAmount}. Total commission: ${totalCommission}`;
+    const html = `<h3> Hello ${user.name} </h3><p>${emailBody}</p>`;
+    const emailContent: EmailContent = {
+      subject: 'Your Sales',
+      email: user.email,
+      html,
+    };
+
+    await this.producerService.addToEmailQueue(emailContent);
+    return emailBody;
   }
 
   findAll() {

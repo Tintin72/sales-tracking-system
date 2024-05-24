@@ -5,6 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SaleSchema } from './schema/sale.schema';
 import { ProductModule } from 'src/product/product.module';
 import { UserModule } from 'src/user/user.module';
+import { ConfigModule } from '@nestjs/config';
+import { QueuesModule } from 'src/queues/queues.module';
 
 @Module({
   controllers: [SalesController],
@@ -13,6 +15,8 @@ import { UserModule } from 'src/user/user.module';
     MongooseModule.forFeature([{ name: 'Sale', schema: SaleSchema }]),
     ProductModule,
     UserModule,
+    ConfigModule,
+    QueuesModule,
   ],
 })
 export class SalesModule {}

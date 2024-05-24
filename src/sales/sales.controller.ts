@@ -66,6 +66,22 @@ export class SalesController {
     }
   }
 
+  @Get('/email')
+  @UseGuards(JwtAuthGuard)
+  async sendUserSalesByEmail(@Req() req, @Res() response) {
+    try {
+      const user: TokenPayload = req.user;
+      const sales = await this.salesService.sendUserSalesByEmail(user.userId);
+      return response.status(HttpStatus.OK).json({
+        message: sales,
+      });
+    } catch (e) {
+      return response
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: e.message });
+    }
+  }
+
   @Get()
   findAll() {
     return this.salesService.findAll();
