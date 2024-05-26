@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 
@@ -9,12 +9,14 @@ import TokenPayload from 'src/auth/auth.interface';
 import { ProductService } from 'src/product/product.service';
 import { UserService } from 'src/user/user.service';
 import { ConfigService } from '@nestjs/config';
-import { EmailService } from 'src/email/email.service';
 import { EmailContent } from 'src/email/email.interface';
 import { ProducerService } from 'src/queues/producer.queue';
+import { Cron } from '@nestjs/schedule';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class SalesService {
+  private readonly logger = new Logger(SalesService.name);
   constructor(
     @InjectModel('Sale') private saleModel: Model<SaleDocument>,
     private readonly productService: ProductService,
