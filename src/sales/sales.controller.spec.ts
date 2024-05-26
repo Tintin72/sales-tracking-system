@@ -4,6 +4,7 @@ import { SalesService } from './sales.service';
 
 describe('SalesController', () => {
   let controller: SalesController;
+  let service: SalesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
