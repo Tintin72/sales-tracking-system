@@ -31,21 +31,19 @@ export class SalesService {
    * @param {TokenPayload} owner - The owner of the sale.
    * @return {Promise<SaleDocument>} The created sale.
    */
-  async create(createSaleDto: CreateSaleDto, owner: TokenPayload) {
+  async recordSale(createSaleDto: CreateSaleDto, owner: TokenPayload) {
     const product = await this.productService.findOne(createSaleDto.product);
     if (!createSaleDto.amount) {
       createSaleDto.amount = product.price;
     }
 
     //calculate the total amount
-    const commission =
-      createSaleDto.amount *
-      this.configService.get('SALES_COMMISSION_PERCENTAGE');
+    const commission = this.calculateCommission(createSaleDto.amount);
 
     const createdSale = new this.saleModel({
       ...createSaleDto,
       commission,
-      owner: owner.userId,
+      agent: owner.userId,
     });
 
     await createdSale.populate({
