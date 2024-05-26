@@ -40,7 +40,7 @@ export class SalesController {
   ) {
     try {
       const user: TokenPayload = req.user;
-      const sale = await this.salesService.create(createSaleDto, req.user);
+      const sale = await this.salesService.recordSale(createSaleDto, user);
       return response.status(HttpStatus.CREATED).json(sale);
     } catch (e) {
       return response
@@ -52,28 +52,52 @@ export class SalesController {
   @Get('/user')
   @UseGuards(JwtAuthGuard)
   /**
-   * Retrieves the sales made by a user based on the provided query parameters.
+   * Retrieves the sales made by an individual agent.
    *
-   * @param {Req} req - The request object.
-   * @param {Res} response - The response object.
-   * @param {string} query - The email query parameter.
-   * @return {Promise<Response>} The response object with the sales data or an error message.
+   * @param {Request} req - The request object containing the user information.
+   * @param {Response} response - The response object used to send the sales data.
+   * @return {Promise<Response>} The response object containing the sales data or an error message.
    */
-  async findUserSales(@Req() req, @Res() response, @Query('email') query) {
+  async findIndividualAgentSales(@Req() req, @Res() response) {
     try {
       const user: TokenPayload = req.user;
-      if (query) {
-        console.log('query', query);
-        try {
-          const sales = await this.salesService.findUserSalesByEmail(query);
-          return response.status(HttpStatus.OK).json(sales);
-        } catch (e) {
-          return response
-            .status(HttpStatus.BAD_REQUEST)
-            .json({ message: e.message });
-        }
-      }
       const sales = await this.salesService.findUserSales(user.userId);
+      return response.status(HttpStatus.OK).json(sales);
+    } catch (e) {
+      return response
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: e.message });
+    }
+  }
+
+  //get user grouped sales
+  @Get('/user/grouped')
+  async getGroupedUserSales(@Req() req, @Res() response) {
+    try {
+      const sales = await this.salesService.groupedAgentUnpaidCommission();
+      return response.status(HttpStatus.OK).json(sales);
+    } catch (e) {
+      return response
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: e.message });
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/user/date')
+  async userSalesByDate(
+    @Req() req,
+    @Res() response,
+    @Query('start_date') start_date,
+    @Query('end_date') end_date,
+  ) {
+    try {
+      const user: TokenPayload = req.user;
+      const sales = await this.salesService.getUserSalesByDate(
+        start_date,
+        end_date,
+        user.userId,
+      );
       return response.status(HttpStatus.OK).json(sales);
     } catch (e) {
       return response
@@ -84,10 +108,23 @@ export class SalesController {
 
   @Get('/email')
   @UseGuards(JwtAuthGuard)
-  async sendUserSalesByEmail(@Req() req, @Res() response) {
+  /**
+   * Asynchronously sends the sales made by a user to their email address.
+   *
+   * @param {Req} req - The request object.
+   * @param {Res} response - The response object.
+   * @return {Promise<Response>} The response object with the sales data or an error message.
+   */
+  async sendUserSalesByEmail(
+    @Res() response,
+    @Query('start_date') start_date,
+    @Query('end_date') end_date,
+  ) {
     try {
-      const user: TokenPayload = req.user;
-      const sales = await this.salesService.sendUserSalesByEmail(user.userId);
+      const sales = await this.salesService.sendUserSalesByEmail(
+        start_date,
+        end_date,
+      );
       return response.status(HttpStatus.OK).json({
         message: sales,
       });
@@ -99,22 +136,73 @@ export class SalesController {
   }
 
   @Get()
-  findAll() {
-    return this.salesService.findAll();
+  /**
+   * Retrieves all sales records.
+   *
+   * @return {Promise<Sale[]>} A promise that resolves to an array of sale records.
+   */
+  async findAll() {
+    return await this.salesService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.salesService.findOne(id);
+  /**
+   * Retrieves a sale by its ID and returns it as a JSON response.
+   *
+   * @param {string} id - The ID of the sale to retrieve.
+   * @param {Response} response - The response object to send the JSON response with.
+   * @return {Promise<Response>} The JSON response containing the sale if found, or an error message if not found.
+   */
+  async findOne(@Param('id') id: string, @Res() response) {
+    const sale = await this.salesService.findOne(id);
+    if (!sale) {
+      return response.status(HttpStatus.NOT_FOUND).json({
+        message: 'Sale not found',
+      });
+    }
+    return response.status(HttpStatus.OK).json(sale);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSaleDto: UpdateSaleDto) {
-    return this.salesService.update(id, updateSaleDto);
+  /**
+   * Updates a sale by its ID.
+   *
+   * @param {string} id - The ID of the sale to update.
+   * @param {UpdateSaleDto} updateSaleDto - The data to update the sale with.
+   * @param {Response} response - The response object to send the result.
+   * @return {Promise<Sale | void>} - The updated sale if it exists, or void if it doesn't.
+   */
+  async update(
+    @Param('id') id: string,
+    @Body() updateSaleDto: UpdateSaleDto,
+    @Res() response,
+  ) {
+    const sale = await this.salesService.update(id, updateSaleDto);
+    if (!sale) {
+      return response.status(HttpStatus.NOT_FOUND).json({
+        message: 'Sale not found',
+      });
+    }
+    return response.status(HttpStatus.OK).json(sale);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.salesService.remove(id);
+  /**
+   * Asynchronously removes a sale with the given ID from the database.
+   *
+   * @param {string} id - The ID of the sale to remove.
+   * @param {Response} response - The response object to send the result.
+   * @return {Promise<Response>} The response object with the result of the deletion.
+   */
+  async remove(@Param('id') id: string, @Res() response) {
+    const sale = await this.salesService.remove(id);
+    if (!sale) {
+      return response.status(HttpStatus.NOT_FOUND).json({
+        message: 'Sale not found',
+      });
+    }
+    return response.status(HttpStatus.NO_CONTENT).json({
+      message: 'Sale deleted successfully',
+    });
   }
 }
