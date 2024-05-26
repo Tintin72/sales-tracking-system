@@ -5,13 +5,13 @@ This repository provides a systematic way for Sales Agents to track their Sales 
 To get started on running the app, we need to configure our local enviroment. Let's first start by setting up our prerequisites.
 
 ## Prerequisites
-- NodeJs
+- NodeJs:
 For starters, make sure you have nodeJs installed in your machine. We recommend node v18 or higher. To install nodeJs in your system you can utilize nvm. Check out this repo to install [nvm](https://github.com/nvm-sh/nvm) in your system.
 
-- MongoDb Atlas
+- MongoDb Atlas:
 To set up the DB visit [MongoDB Atlas](https://www.mongodb.com/atlas) to set up a free account. The service is free and is easy to set up.
 
-- RabbitMQ
+- RabbitMQ:
 RabbitMQ is an open source message broker that helps in working with asynchronous tasks. In this project we utilize RabbitMQ in managing asynchronous tasks for our Email Service. Here is a link to install on ubuntu and Debian Systems [RabbitMQ](https://www.rabbitmq.com/docs/install-debian).
 
 
