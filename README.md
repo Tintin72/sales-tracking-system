@@ -1,32 +1,38 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Sales Tracking System
+This repository provides a systematic way for Sales Agents to track their Sales and Commissions for different products sold. It provides a secure way to authenticate, manage products, record sales and track commissions. It also implements an Email Service which notifies Agents on certain actions depending on their activities. This include providing monthly updates on their sales and commission. At the backbone, it utilizes [MongoDB Atlas](https://www.mongodb.com/atlas) and [NestJs](https://nestjs.com/).
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Getting Started
+To get started on running the app, we need to configure our local enviroment. Let's first start by setting up our prerequisites.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Prerequisites
+- NodeJs
+For starters, make sure you have nodeJs installed in your machine. We recommend node v18 or higher. To install nodeJs in your system you can utilize nvm. Check out this repo to install [nvm](https://github.com/nvm-sh/nvm) in your system.
 
-## Description
+- MongoDb Atlas
+To set up the DB visit [MongoDB Atlas](https://www.mongodb.com/atlas) to set up a free account. The service is free and is easy to set up.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- RabbitMQ
+RabbitMQ is an open source message broker that helps in working with asynchronous tasks. In this project we utilize RabbitMQ in managing asynchronous tasks for our Email Service. Here is a link to install on ubuntu and Debian Systems [RabbitMQ](https://www.rabbitmq.com/docs/install-debian).
+
+
 
 ## Installation
+With the prerequisites installed. We can look to Clone the repo.
+
+```bash
+$ git clone git@github.com:Tintin72/sales-tracking-system.git
+```
+
+```bash
+$ cd sales-tracking-system
+```
+
+Set up the enviroment by copying env variables. Change the relevant variables like the MONGODB_URI with your mongodb connection string. Update the 
+
+```bash
+$ cp .env.example .env
+```
+Install the required dependencies.
 
 ```bash
 $ npm install
@@ -34,18 +40,24 @@ $ npm install
 
 ## Running the app
 
+Run the app locally in watch mode.
+
 ```bash
-# development
-$ npm run start
 
-# watch mode
+#run development in watch mode
 $ npm run start:dev
+```
 
+To run in Production
+
+```bash
 # production mode
 $ npm run start:prod
 ```
 
 ## Test
+
+To test the app run the following commands.
 
 ```bash
 # unit tests
@@ -58,16 +70,3 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
