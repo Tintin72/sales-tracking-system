@@ -14,7 +14,7 @@ export class UserService {
    * @return {Promise<UserDocument[]>} A promise that resolves to an array of user documents.
    */
   async findAll(): Promise<UserDocument[]> {
-    return this.userModel.find().exec();
+    return await this.userModel.find();
   }
 
   async findByEmail(email: string): Promise<UserDocument> {
@@ -28,7 +28,7 @@ export class UserService {
    * @return {Promise<UserDocument>} - A promise that resolves to the user document with the given ID.
    */
   async findOne(id: string): Promise<UserDocument> {
-    return this.userModel.findById(id).exec();
+    return this.userModel.findById(id);
   }
 
   async findOneByEmail(email: string): Promise<UserDocument> {

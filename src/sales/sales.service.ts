@@ -13,6 +13,7 @@ import { EmailContent } from 'src/email/email.interface';
 import { ProducerService } from 'src/queues/producer.queue';
 import { Cron } from '@nestjs/schedule';
 import mongoose from 'mongoose';
+import { CreatedSale, UserSalesByDateResponse } from './sales.interface';
 
 @Injectable()
 export class SalesService {
@@ -31,7 +32,10 @@ export class SalesService {
    * @param {TokenPayload} owner - The owner of the sale.
    * @return {Promise<SaleDocument>} The created sale.
    */
-  async recordSale(createSaleDto: CreateSaleDto, owner: TokenPayload) {
+  async recordSale(
+    createSaleDto: CreateSaleDto,
+    owner: TokenPayload,
+  ): Promise<CreatedSale> {
     const product = await this.productService.findOne(createSaleDto.product);
     if (!createSaleDto.amount) {
       createSaleDto.amount = product.price;
@@ -40,7 +44,7 @@ export class SalesService {
     //calculate the total amount
     const commission = this.calculateCommission(createSaleDto.amount);
 
-    const createdSale = new this.saleModel({
+    const createdSale = await this.saleModel.create({
       ...createSaleDto,
       commission,
       agent: owner.userId,
@@ -53,7 +57,7 @@ export class SalesService {
     });
     await createdSale.populate({ path: 'agent', select: 'name email' });
 
-    return createdSale.save();
+    return createdSale.toJSON() as CreatedSale;
   }
 
   /**
@@ -88,13 +92,17 @@ export class SalesService {
    * @param {string} userId - The ID of the user.
    * @return {Promise<{ totalSalesAmount: number, totalCommission: number }>} An object containing the total sales amount and total commission for the user within the given date range.
    */
-  async getUserSalesByDate(start_date: Date, end_date: Date, userId: string) {
+  async getUserSalesByDate(
+    start_date: Date,
+    end_date: Date,
+    userId: string,
+  ): Promise<UserSalesByDateResponse> {
     //if endDate is empty, set it to now
     // Convert date strings to Date objects
     const startDate = new Date(start_date);
     const endDate = end_date ? new Date(end_date) : new Date();
 
-    const sales = await this.saleModel.aggregate([
+    const sales: UserSalesByDateResponse[] = await this.saleModel.aggregate([
       {
         $match: {
           agent: new mongoose.Types.ObjectId(userId),
@@ -109,7 +117,12 @@ export class SalesService {
         },
       },
     ]);
-    return sales[0] || { totalSalesAmount: 0, totalCommission: 0 };
+
+    // If no sales found, return an empty object
+    if (!sales) {
+      return {_id: null, totalSales: 0, totalCommission: 0 };
+    }
+    return sales[0];
   }
 
   /**

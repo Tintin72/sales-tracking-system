@@ -3,8 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
   ConflictException,
-  HttpException,
-  HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -14,7 +13,6 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { User, UserDocument } from '../user/schema/user.schema';
 import { UserService } from 'src/user/user.service';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -22,12 +20,19 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
     private userService: UserService,
-    private readonly configService: ConfigService,
   ) {}
 
   saltRounds = 10;
 
-  async signUp(createUserDto: CreateUserDto): Promise<UserDocument> {
+  /**
+   * Sign up a new user.
+   *
+   * @param {CreateUserDto} createUserDto - The user data to create a new user.
+   * @return {Promise<UserDocument>} The newly created user document.
+   * @throws {ConflictException} If a user with the same email already exists.
+   * @throws {BadRequestException} If there is an error hashing the password or saving the user.
+   */
+  async signUp(createUserDto: CreateUserDto) {
     const existingUser = await this.userService.findOneByEmail(
       createUserDto.email,
     );
@@ -37,13 +42,13 @@ export class AuthService {
     try {
       const salt = await bcrypt.genSalt(this.saltRounds);
       const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
-      const user = new this.userModel({
+      const user = await this.userModel.create({
         ...createUserDto,
         password: hashedPassword,
       });
-      return user.save();
+      return user;
     } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new BadRequestException(error.message);
     }
   }
 
