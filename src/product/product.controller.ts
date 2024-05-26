@@ -74,7 +74,7 @@ export class ProductController {
     return response.status(HttpStatus.OK).json(product);
   }
 
-  @Patch(':id')
+  @Put(':id')
   /**
    * Updates a product by its ID.
    *
