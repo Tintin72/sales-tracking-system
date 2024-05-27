@@ -15,7 +15,7 @@ To set up the DB visit [MongoDB Atlas](https://www.mongodb.com/atlas) to set up 
 RabbitMQ is an open source message broker that helps in working with asynchronous tasks. In this project we utilize RabbitMQ in managing asynchronous tasks for our Email Service. Here is a link to install on ubuntu and Debian Systems [RabbitMQ](https://www.rabbitmq.com/docs/install-debian).
 
 - Email Service:
-We will require an email service that will be used to send emails, for this particular one I utilized zoho mail smtp server but any other service is ok. This may include Sendgrid, Mailchimp, Brevo etc. Once you have the details you will input the required credentials in the ```bash .env ``` file provided.
+We will require an email service that will be used to send emails, for this particular one I utilized zoho mail smtp server but any other service is ok. This may include Sendgrid, Mailchimp, Brevo etc. Once you have the details you will input the required credentials in the ```.env ``` file provided.
 
 
 
