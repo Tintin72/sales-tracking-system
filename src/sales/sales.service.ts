@@ -1,16 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
 
 import { SaleDocument } from './schema/sale.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import TokenPayload from 'src/auth/auth.interface';
-import { ProductService } from 'src/product/product.service';
-import { UserService } from 'src/user/user.service';
+import TokenPayload from '../auth/auth.interface';
+import { ProductService } from '../product/product.service';
+import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
-import { EmailContent } from 'src/email/email.interface';
-import { ProducerService } from 'src/queues/producer.queue';
+import { EmailContent } from '../email/email.interface';
+import { ProducerService } from '../queues/producer.queue';
 import { Cron } from '@nestjs/schedule';
 import mongoose from 'mongoose';
 import { CreatedSale, UserSalesByDateResponse } from './sales.interface';
@@ -71,17 +71,59 @@ export class SalesService {
     return saleAmount * this.configService.get('SALES_COMMISSION_PERCENTAGE');
   }
 
-  async markCommissionsAsPaid(agentId: string, startDate: Date, endDate: Date) {
-    const result = await this.saleModel.updateMany(
-      {
-        agent: agentId,
-        createdAt: { $gte: startDate, $lte: endDate },
-        isCommissionPaid: false,
-      },
-      { $set: { isCommissionPaid: true } },
-    );
-    // Returns the number of documents modified
-    return result.modifiedCount;
+  async getAllAgentSalesandCommission(startDate: Date, endDate: Date) {
+    const start_date = new Date(startDate);
+    const end_date = endDate ? new Date(endDate) : new Date();
+
+    if (!startDate) {
+      throw new BadRequestException('Date range parameters are required.');
+    }
+
+    const sales = await this.saleModel
+      .aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: start_date,
+              $lt: end_date,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: '$agent',
+            totalSalesAmount: { $sum: '$amount' },
+            totalCommission: { $sum: '$commission' },
+          },
+        },
+        {
+          $lookup: {
+            from: 'users', // Name of the user collection
+            localField: '_id',
+            foreignField: '_id',
+            as: 'agentDetails',
+          },
+        },
+        {
+          $unwind: '$agentDetails',
+        },
+        {
+          $project: {
+            _id: 0,
+            agent: {
+              _id: '$agentDetails._id',
+              name: '$agentDetails.name',
+              email: '$agentDetails.email',
+              id: '$agentDetails._id',
+            },
+            totalSalesAmount: 1,
+            totalCommission: 1,
+          },
+        },
+      ])
+      .exec();
+    this.logger.log(sales);
+    return sales;
   }
 
   /**
@@ -120,7 +162,7 @@ export class SalesService {
 
     // If no sales found, return an empty object
     if (!sales) {
-      return {_id: null, totalSales: 0, totalCommission: 0 };
+      return { _id: null, totalSales: 0, totalCommission: 0 };
     }
     return sales[0];
   }

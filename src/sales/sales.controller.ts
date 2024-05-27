@@ -15,8 +15,8 @@ import {
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { UpdateSaleDto } from './dto/update-sale.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import TokenPayload from 'src/auth/auth.interface';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import TokenPayload from '../auth/auth.interface';
 
 @Controller('sales')
 export class SalesController {
@@ -49,7 +49,7 @@ export class SalesController {
     }
   }
 
-  @Get('/user')
+  @Get('/agent-sales')
   @UseGuards(JwtAuthGuard)
   /**
    * Retrieves the sales made by an individual agent.
@@ -58,7 +58,7 @@ export class SalesController {
    * @param {Response} response - The response object used to send the sales data.
    * @return {Promise<Response>} The response object containing the sales data or an error message.
    */
-  async findIndividualAgentSales(@Req() req, @Res() response) {
+  async findAgentSales(@Req() req, @Res() response) {
     try {
       const user: TokenPayload = req.user;
       const sales = await this.salesService.findUserSales(user.userId);
@@ -71,8 +71,8 @@ export class SalesController {
   }
 
   //get user grouped sales
-  @Get('/user/grouped')
-  async getGroupedUserSales(@Req() req, @Res() response) {
+  @Get('/agent-unpaid-commission')
+  async getGroupedAgentUnpaidCommission(@Req() req, @Res() response) {
     try {
       const sales = await this.salesService.groupedAgentUnpaidCommission();
       return response.status(HttpStatus.OK).json(sales);
@@ -84,7 +84,7 @@ export class SalesController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('/user/date')
+  @Get('/agent-sales-by-date')
   async userSalesByDate(
     @Req() req,
     @Res() response,
@@ -97,6 +97,27 @@ export class SalesController {
         start_date,
         end_date,
         user.userId,
+      );
+      return response.status(HttpStatus.OK).json(sales);
+    } catch (e) {
+      return response
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: e.message });
+    }
+  }
+
+  @Get('/total-agent-sales-by-date')
+  @UseGuards(JwtAuthGuard)
+  async agentSalesByDate(
+    @Req() req,
+    @Res() response,
+    @Query('start_date') start_date,
+    @Query('end_date') end_date,
+  ) {
+    try {
+      const sales = await this.salesService.getAllAgentSalesandCommission(
+        start_date,
+        end_date,
       );
       return response.status(HttpStatus.OK).json(sales);
     } catch (e) {

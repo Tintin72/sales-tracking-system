@@ -1,8 +1,8 @@
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
-import { User } from 'src/user/schema/user.schema';
+import { User } from '../../user/schema/user.schema';
 import { Transform, Type } from 'class-transformer';
-import { Product } from 'src/product/schema/product.schema';
+import { Product } from '../../product/schema/product.schema';
 
 export type SaleDocument = HydratedDocument<Sale>;
 
